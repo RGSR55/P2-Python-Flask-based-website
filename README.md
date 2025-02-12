@@ -1,6 +1,6 @@
 # P2-Python-Flask-based-website
 
-<div align="justify">This is an E-Commerce website project built using JavaScript, Bootstrap, HTML and CSS for the frontend and Python/Flask along with SQLite database for the backend. API integration: https://fakestoreapiserver.reactbd.com/products
+<div align="justify">This is an E-Commerce website project built using JavaScript, Bootstrap, HTML and CSS for the frontend and Python/Flask along with SQLite database for the backend. API integration: https://fakestoreapiserver.reactbd.com/products <br>
 
 This products list website application allows users to search, sort, filter, and view detailed information with dynamic star-ranking system about products data feetching from “fakestore” API. This app includes user authentication with secure login/register functionality with encrypted password storage, password reset and recovery system. It also include features such as a wishlist, shopping cart functionality, profile painel performing CRUD operations and order management with oder history, allows complete purchasing process with order confirmation and payment gateway integration.</div>
 
