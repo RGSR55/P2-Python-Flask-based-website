@@ -35,6 +35,7 @@ This products list website application allows users to search, sort, filter, and
 <li>Create virtual enviroment (use virtualenv) and activate.</li>
 <li>Download the necessary python dependencies.</li>
 <li>Run the Flask application (python app.py) and open the url that it gives you after you run the code to see the dynamically fetched content.</li>
+<li>demo account (username: admin / password: admin123)</li>
 
 
 
