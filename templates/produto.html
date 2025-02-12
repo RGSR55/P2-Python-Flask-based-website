@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Início</a></li>
+            <li class="breadcrumb-item active">{{ produto.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="product-image-container">
+                <img src="{{ produto.image }}" alt="{{ produto.title }}" class="img-fluid produto-detalhe-img">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h1>{{ produto.title }}</h1>
+            <p class="lead2">Preço Antes: {{ "%.2f"|format(produto.oldPrice|float) }}&nbsp;€</p>
+            <p class="lead">Agora: {{ "%.2f"|format(produto.price) }}&nbsp;€</p>
+            
+            <div class="avaliacao mb-3">
+                <span id="rating-stars-main"> </span> 
+                <span id="rating-text"> {{ produto.rating }}/5 &nbsp;&nbsp;</span>
+                {% if produto.isNew %}
+                     <span style="font-weight:bold; background-color: black; color:white">NOVO LANÇAMENTO</span>
+                {% endif %}     
+            </div>
+            <div class="categoria mb-3">
+                <span class="badge bg-secondary">{{ produto.category }}</span>
+            </div>
+            <p class="descricao">{{ produto.description }}</p>
+            
+            
+            {% if current_user.is_authenticated %}
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="quantidade-compra me-2">
+                        <label for="quantidade" class="form-label">Quantidade:</label>
+                        <input type="number" id="quantidade" class="form-control" value="1" min="1" max="99">
+                    </div>
+                    <button class="btn btn-primary btn-lg btn-adicionar-carrinho" data-produto-id="{{ produto.id }}">
+                        <i class="fas fa-cart-plus"></i> Adicionar ao Carrinho
+                    </button>
+                    <button class="btn btn-outline-danger me-2 btn-favorito" 
+                            data-produto-id="{{ produto.id }}"
+                            data-favorito="{{ 'true' if current_user.is_favorito(produto.id) else 'false' }}">
+                        <i class="fas fa-heart{{ '' if current_user.is_favorito(produto.id) else '-broken' }}"></i>
+                        {{ 'Remover dos Favoritos' if current_user.is_favorito(produto.id) else 'Adicionar aos Favoritos' }}
+                    </button>
+                </div>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sessão para Comprar
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Seção de detalhes adicionais -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="produtoTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="descricao-tab" data-bs-toggle="tab" 
+                            data-bs-target="#descricao" type="button" role="tab">Descrição</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="avaliacoes-tab" data-bs-toggle="tab" 
+                            data-bs-target="#avaliacoes" type="button" role="tab">Avaliações</button>
+                </li>
+            </ul>
+            <div class="tab-content p-4 border border-top-0" id="produtoTabsContent">
+                <div class="tab-pane fade show active" id="descricao" role="tabpanel">
+                    <p>{{ produto.description }}</p>
+                    <h4>Detalhes do Produto</h4>
+                    <ul>
+                        <li>Categoria: {{ produto.category }}</li>
+                        <li>ID do Produto: {{ produto.id }}</li>
+                        {% if produto.isNew %}
+                            <li>Adicionado Recentemente</li>
+                        {% endif %}
+                        <li>Avaliação Média: {{ produto.rating }}/5</li>
+                    </ul>
+                </div>
+                <div class="tab-pane fade" id="avaliacoes" role="tabpanel">
+                    <h4><em>Classificação Geral</em></h4>
+                    <div class="d-flex align-items-center mb-4">
+                        
+                        <div class="display-4 me-3"><span id="rating-text"> {{ produto.rating }} </span></div>
+                        <div id="rating-stars-avaliacoes"></div>
+                                                     
+                        
+                    </div>
+                    
+                    <!-- Aqui podemos adicionar as avaliações individuais no futuro -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Função para mostrar notificação
+    function mostrarNotificacao(mensagem, tipo = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container').insertAdjacentElement('afterbegin', alertDiv);
+        
+        // Remove a notificação após 3 segundos
+        setTimeout(() => alertDiv.remove(), 3000);
+    }
+
+    document.querySelector('.btn-favorito')?.addEventListener('click', async function() {
+    const produtoId = this.dataset.produtoId;
+    const isFavorito = this.dataset.favorito === 'true';
+    const endpoint = isFavorito ? '/api/favoritos/remover' : '/api/favoritos/adicionar';
+    
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ produto_id: produtoId })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            this.dataset.favorito = (!isFavorito).toString();
+            const icon = this.querySelector('i');
+            if (isFavorito) {
+                icon.classList.replace('fa-heart', 'fa-heart-broken');
+                this.textContent = ' Adicionar aos Favoritos';
+                mostrarNotificacao('Produto removido dos favoritos');
+            } else {
+                icon.classList.replace('fa-heart-broken', 'fa-heart');
+                this.textContent = ' Remover dos Favoritos';
+                mostrarNotificacao('Produto adicionado aos favoritos');
+            }
+            icon.classList.add('fas');
+            this.prepend(icon);
+        }
+    } catch (error) {
+        mostrarNotificacao('Erro ao atualizar favoritos', 'danger');
+    }
+});
+
+    // Função para adicionar ao carrinho
+    async function adicionarAoCarrinho(produtoId, quantidade) {
+        try {
+            const response = await fetch('/api/carrinho/adicionar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    produto_id: produtoId,
+                    quantidade: quantidade 
+                })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                mostrarNotificacao('Produto adicionado ao carrinho com sucesso!');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                mostrarNotificacao(result.error || 'Erro ao adicionar produto ao carrinho', 'danger');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao adicionar produto ao carrinho', 'danger');
+        }
+    }
+
+    // Event listener para o botão de adicionar ao carrinho
+    const btnAdicionar = document.querySelector('.btn-adicionar-carrinho');
+    if (btnAdicionar) {
+        btnAdicionar.addEventListener('click', function() {
+            const produtoId = this.dataset.produtoId;
+            
+            const quantidade = parseInt(document.getElementById('quantidade').value) || 1;
+            
+            // Validar quantidade
+            if (quantidade < 1) {
+                mostrarNotificacao('A quantidade deve ser maior que 0', 'warning');
+                return;
+            }
+            if (quantidade > 99) {
+                mostrarNotificacao('A quantidade máxima é 99', 'warning');
+                return;
+            }
+
+            adicionarAoCarrinho(produtoId, quantidade);
+        });
+    }
+
+    // Validação do input de quantidade
+    const inputQuantidade = document.getElementById('quantidade');
+    if (inputQuantidade) {
+        inputQuantidade.addEventListener('change', function() {
+            let valor = parseInt(this.value) || 1;
+            if (valor < 1) valor = 1;
+            if (valor > 99) valor = 99;
+            this.value = valor;
+        });
+    }
+});
+
+function renderStars(rating, targetId) {
+    const starContainer = document.getElementById(targetId);
+    if (!starContainer) return; 
+
+    starContainer.innerHTML = ""; 
+
+    const fullStars = Math.floor(rating);
+    const halfStar = rating % 1 >= 0.3 && rating % 1 <= 0.7;
+    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+
+    for (let i = 0; i < fullStars; i++) {
+        starContainer.innerHTML += '<i class="fas fa-star text-warning"></i>';
+    }
+
+    if (halfStar) {
+        starContainer.innerHTML += '<i class="fas fa-star-half-alt text-warning"></i>';
+    }
+
+    for (let i = 0; i < emptyStars; i++) {
+        starContainer.innerHTML += '<i class="far fa-star text-warning"></i>';
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const ratingValue = parseFloat("{{ produto.rating }}");
+    if (!isNaN(ratingValue)) {
+        renderStars(ratingValue, "rating-stars-main");
+        renderStars(ratingValue, "rating-stars-avaliacoes");
+    } else {
+        console.error("Erro: Rating inválido");
+    }
+});
+</script>
+{% endblock %}

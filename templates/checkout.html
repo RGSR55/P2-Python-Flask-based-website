@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Finalizar Compra</h1>
+    
+    <!-- Seleção de Endereço -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Endereço de Entrega</h5>
+            
+            {% if current_user.enderecos %}
+                <div class="mb-3">
+                    {% for endereco in current_user.enderecos %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" 
+                               name="endereco_entrega" id="endereco_{{ endereco.id }}"
+                               value="{{ endereco.id }}" 
+                               {% if endereco.padrao %}checked{% endif %}>
+                        <label class="form-check-label" for="endereco_{{ endereco.id }}">
+                            <strong>{{ endereco.nome }}</strong><br>
+                            {{ endereco.rua }}, {{ endereco.numero }}<br>
+                            {{ endereco.codigo_postal }} {{ endereco.cidade }}<br>
+                            {{ endereco.distrito }}<br>
+                            Tel: {{ endereco.telefone }}
+                            {% if endereco.padrao %}
+                                <span class="badge bg-primary">Padrão</span>
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if current_user.enderecos|length < 3 %}
+                    <button class="btn btn-outline-primary" id="btnNovoEndereco">
+                        <i class="fas fa-plus"></i> Adicionar Novo Endereço
+                    </button>
+                {% endif %}
+            {% endif %}
+
+            <!-- Formulário de Novo Endereço -->
+            <form id="formNovoEndereco" class="{% if current_user.enderecos %}d-none{% endif %}">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" name="nome" required>
+                    </div>
+                    <div class="col-9">
+                        <label class="form-label">Rua</label>
+                        <input type="text" class="form-control" name="rua" required>
+                    </div>
+                    <div class="col-3">
+                        <label class="form-label">Número</label>
+                        <input type="text" class="form-control" name="numero" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Código Postal</label>
+                        <input type="text" class="form-control" name="codigo_postal" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Cidade</label>
+                        <input type="text" class="form-control" name="cidade" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Distrito</label>
+                        <input type="text" class="form-control" name="distrito" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Telefone</label>
+                        <input type="tel" class="form-control" name="telefone" required>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Guardar Endereço</button>
+                        {% if current_user.enderecos %}
+                            <button type="button" class="btn btn-secondary" id="btnCancelarNovoEndereco">
+                                Cancelar
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Método de Pagamento -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Método de Pagamento</h5>
+            
+            <div class="mb-3">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="metodo_pagamento" id="mbway" value="mbway" checked>
+                    <label class="form-check-label" for="mbway">
+                        <i class="fas fa-mobile-alt"></i> MB WAY
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="metodo_pagamento" id="multibanco" value="multibanco">
+                    <label class="form-check-label" for="multibanco">
+                        <i class="fas fa-university"></i> Multibanco
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="metodo_pagamento" id="cartao" value="cartao">
+                    <label class="form-check-label" for="cartao">
+                        <i class="fas fa-credit-card"></i> Cartão de Crédito/Débito
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Formulário MB WAY -->
+            <div id="mbwayForm" class="payment-form">
+                <div class="mb-3">
+                    <label class="form-label">Número de Telemóvel</label>
+                    <input type="tel" class="form-control" pattern="[0-9]{9}" placeholder="912345678" id="mbwayTelefone">
+                </div>
+            </div>
+            
+            <!-- Formulário Cartão -->
+            <div id="cartaoForm" class="payment-form d-none">
+                <div class="mb-3">
+                    <label class="form-label">Número do Cartão</label>
+                    <input type="text" class="form-control" placeholder="1234 5678 9012 3456" id="cartaoNumero">
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label class="form-label">Validade</label>
+                        <input type="text" class="form-control" placeholder="MM/AA" id="cartaoValidade">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">CVV</label>
+                        <input type="text" class="form-control" placeholder="123" id="cartaoCVV">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referência Multibanco -->
+            <div id="multibancoInfo" class="payment-form d-none">
+                <div class="alert alert-info">
+                    A referência Multibanco será gerada após a confirmação do pedido.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resumo do Pedido -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Resumo do Pedido</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th class="text-center">Quantidade</th>
+                            <th class="text-end">Preço</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in current_user.carrinho.get('items', []) %}
+                        <tr>
+                            <td>{{ item.titulo }}</td>
+                            <td class="text-center">{{ item.quantidade }}</td>
+                            <td class="text-end">{{ "%.2f"|format(item.preco) }}€</td>
+                            <td class="text-end">{{ "%.2f"|format(item.subtotal) }}€</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td class="text-end">
+                                <strong>{{ "%.2f"|format(current_user.carrinho.get('total', 0)) }}€</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-grid gap-2">
+        <button class="btn btn-success btn-lg" id="btnConfirmarPedido">
+            <i class="fas fa-check"></i> Confirmar Pedido
+        </button>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Pagamento -->
+<div class="modal fade" id="modalPagamento" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Pagamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalPagamentoBody">
+                <!-- Conteúdo será preenchido via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnNovoEndereco = document.getElementById('btnNovoEndereco');
+    const formNovoEndereco = document.getElementById('formNovoEndereco');
+    const btnCancelar = document.getElementById('btnCancelarNovoEndereco');
+    const btnConfirmarPedido = document.getElementById('btnConfirmarPedido');
+    const modalPagamento = new bootstrap.Modal(document.getElementById('modalPagamento'));
+    
+    // Controles do método de pagamento
+    const mbwayForm = document.getElementById('mbwayForm');
+    const cartaoForm = document.getElementById('cartaoForm');
+    const multibancoInfo = document.getElementById('multibancoInfo');
+    
+    // Event listeners para método de pagamento
+    document.querySelectorAll('input[name="metodo_pagamento"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            mbwayForm.classList.add('d-none');
+            cartaoForm.classList.add('d-none');
+            multibancoInfo.classList.add('d-none');
+            
+            if (this.value === 'mbway') {
+                mbwayForm.classList.remove('d-none');
+            } else if (this.value === 'cartao') {
+                cartaoForm.classList.remove('d-none');
+            } else if (this.value === 'multibanco') {
+                multibancoInfo.classList.remove('d-none');
+            }
+        });
+    });
+
+    if (btnNovoEndereco) {
+        btnNovoEndereco.addEventListener('click', function() {
+            btnNovoEndereco.classList.add('d-none');
+            formNovoEndereco.classList.remove('d-none');
+        });
+    }
+
+    if (btnCancelar) {
+        btnCancelar.addEventListener('click', function() {
+            formNovoEndereco.classList.add('d-none');
+            btnNovoEndereco.classList.remove('d-none');
+            formNovoEndereco.reset();
+        });
+    }
+
+    formNovoEndereco.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const dados = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/api/endereco/adicionar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dados)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                mostrarNotificacao('Endereço adicionado com sucesso');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                mostrarNotificacao(result.error, 'danger');
+            }
+        } catch (error) {
+            mostrarNotificacao('Erro ao adicionar endereço', 'danger');
+        }
+    });
+
+    function validarFormularioPagamento(metodoPagamento) {
+        switch (metodoPagamento) {
+            case 'mbway':
+                const telefone = document.getElementById('mbwayTelefone').value;
+                if (!telefone || telefone.length !== 9) {
+                    mostrarNotificacao('Introduza um número de telemóvel válido', 'warning');
+                    return false;
+                }
+                break;
+                
+            case 'cartao':
+                const numero = document.getElementById('cartaoNumero').value;
+                const validade = document.getElementById('cartaoValidade').value;
+                const cvv = document.getElementById('cartaoCVV').value;
+                if (!numero || !validade || !cvv) {
+                    mostrarNotificacao('Preencha todos os dados do cartão', 'warning');
+                    return false;
+                }
+                break;
+        }
+        return true;
+    }
+
+    function mostrarModalPagamento(metodoPagamento, pedidoId) {
+        const modalBody = document.getElementById('modalPagamentoBody');
+        let conteudo = '';
+        
+        switch (metodoPagamento) {
+            case 'mbway':
+                conteudo = `
+                    <div class="text-center">
+                        <i class="fas fa-mobile-alt fa-3x mb-3"></i>
+                        <h4>Pagamento MB WAY</h4>
+                        <p>Verifique a notificação no seu telemóvel para confirmar o pagamento.</p>
+                        <div class="alert alert-info">
+                            Pedido #${pedidoId}<br>
+                            A aguardar confirmação...
+                        </div>
+                    </div>
+                `;
+                break;
+                
+            case 'multibanco':
+                conteudo = `
+                    <div class="text-center">
+                        <i class="fas fa-university fa-3x mb-3"></i>
+                        <h4>Referência Multibanco</h4>
+                        <div class="alert alert-info">
+                            <p class="mb-1"><strong>Entidade:</strong> 12345</p>
+                            <p class="mb-1"><strong>Referência:</strong> 123 456 789</p>
+                            <p class="mb-0"><strong>Valor:</strong> ${document.querySelector('tfoot strong').textContent}</p>
+                        </div>
+                        <small class="text-muted">O seu pedido será processado após a confirmação do pagamento.</small>
+                    </div>
+                `;
+                break;
+                
+            case 'cartao':
+                conteudo = `
+                    <div class="text-center">
+                        <i class="fas fa-check-circle fa-3x text-success
+                        <div class="text-center">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h4>Pagamento Confirmado</h4>
+                        <p>O seu pagamento foi processado com sucesso.</p>
+                        <div class="alert alert-success">
+                            Pedido #${pedidoId}<br>
+                            Processando seu pedido...
+                        </div>
+                    </div>
+                `;
+                break;
+        }
+        
+        modalBody.innerHTML = conteudo;
+        modalPagamento.show();
+        
+        // Se não for Multibanco, redireciona para página de pedidos após 3 segundos
+        if (metodoPagamento !== 'multibanco') {
+            setTimeout(() => {
+                window.location.href = '/pedidos';
+            }, 3000);
+        }
+    }
+
+    if (btnConfirmarPedido) {
+        btnConfirmarPedido.addEventListener('click', async function() {
+            const enderecoSelecionado = document.querySelector('input[name="endereco_entrega"]:checked');
+            const metodoPagamento = document.querySelector('input[name="metodo_pagamento"]:checked');
+            
+            if (!enderecoSelecionado) {
+                mostrarNotificacao('Selecione um endereço de entrega', 'warning');
+                return;
+            }
+
+            if (!metodoPagamento) {
+                mostrarNotificacao('Selecione um método de pagamento', 'warning');
+                return;
+            }
+
+            if (!validarFormularioPagamento(metodoPagamento.value)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/pedido/criar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        endereco_id: enderecoSelecionado.value,
+                        metodo_pagamento: metodoPagamento.value
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Mostra modal específico do método de pagamento
+                    mostrarModalPagamento(metodoPagamento.value, result.pedido_id);
+                } else {
+                    mostrarNotificacao(result.error, 'danger');
+                }
+            } catch (error) {
+                mostrarNotificacao('Erro ao processar pedido', 'danger');
+            }
+        });
+    }
+
+    document.querySelectorAll('input[name="endereco_entrega"]').forEach(radio => {
+        radio.addEventListener('change', async function() {
+            try {
+                const response = await fetch('/api/endereco/padrao', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ endereco_id: this.value })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    mostrarNotificacao(result.error, 'danger');
+                }
+            } catch (error) {
+                mostrarNotificacao('Erro ao definir endereço padrão', 'danger');
+            }
+        });
+    });
+
+    function mostrarNotificacao(mensagem, tipo = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container').insertAdjacentElement('afterbegin', alertDiv);
+        setTimeout(() => alertDiv.remove(), 3000);
+    }
+});
+</script>
+{% endblock %}

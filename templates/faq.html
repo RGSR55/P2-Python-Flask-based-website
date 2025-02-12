@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+@media (prefers-color-scheme: dark) {
+    .accordion-item {
+        background-color: #2b3035;
+        border-color: rgba(255,255,255,0.1);
+    }
+    
+    .accordion-button {
+        background-color: #343a40;
+        color: #f8f9fa;
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background-color: #2b3035;
+        color: #f8f9fa;
+    }
+    
+    .accordion-body {
+        background-color: #2b3035;
+        color: #f8f9fa;
+    }
+    
+    .accordion-button::after {
+        filter: invert(1);
+    }
+    
+    h5 {
+        color: #f8f9fa;
+    }
+    
+    p {
+        color: #e9ecef;
+    }
+}
+</style>
+
+<div class="container">
+    <h1 class="mb-4">Perguntas Frequentes</h1>
+    
+    <div class="accordion" id="faqAccordion">
+        <!-- Encomendas -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapseOne">
+                    Encomendas e Entregas
+                </button>
+            </h2>
+            <div id="collapseOne" class="accordion-collapse collapse show" 
+                 data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    <div class="mb-4">
+                        <h5>Qual o prazo de entrega?</h5>
+                        <p>O prazo normal de entrega é de 3 a 5 dias úteis para Portugal Continental.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Como posso acompanhar a minha encomenda?</h5>
+                        <p>Pode acompanhar o estado da sua encomenda na área "Meus Pedidos" do seu perfil.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Posso alterar a morada de entrega?</h5>
+                        <p>Sim, desde que a encomenda ainda não tenha sido expedida.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagamentos -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                    Pagamentos
+                </button>
+            </h2>
+            <div id="collapseTwo" class="accordion-collapse collapse" 
+                 data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    <div class="mb-4">
+                        <h5>Quais são os métodos de pagamento aceites?</h5>
+                        <p>Aceitamos Multibanco, MB WAY e cartões de crédito/débito.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>O pagamento é seguro?</h5>
+                        <p>Sim, todas as transações são processadas de forma segura e encriptada.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Quando é feito o débito?</h5>
+                        <p>O valor é debitado no momento da confirmação da encomenda.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Devoluções -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                    Devoluções
+                </button>
+            </h2>
+            <div id="collapseThree" class="accordion-collapse collapse" 
+                 data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    <div class="mb-4">
+                        <h5>Qual o prazo para devoluções?</h5>
+                        <p>Tem 14 dias para devolver o produto após a receção.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Como faço uma devolução?</h5>
+                        <p>Entre em contacto connosco através do email para iniciar o processo.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Quanto tempo demora o reembolso?</h5>
+                        <p>O reembolso é processado em até 14 dias após recebermos o produto devolvido.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conta -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" 
+                        data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                    Conta e Perfil
+                </button>
+            </h2>
+            <div id="collapseFour" class="accordion-collapse collapse" 
+                 data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    <div class="mb-4">
+                        <h5>Como altero a minha palavra-passe?</h5>
+                        <p>Pode alterar a sua palavra-passe na área "Meu Perfil".</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Posso ter mais de uma conta?</h5>
+                        <p>Não, cada email só pode estar associado a uma conta.</p>
+                    </div>
+                    <div class="mb-4">
+                        <h5>Como elimino a minha conta?</h5>
+                        <p>Entre em contacto com o nosso suporte para solicitar a eliminação da conta.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

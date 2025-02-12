@@ -1,0 +1,356 @@
+/* Reset e variáveis */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+}
+
+/* Normalize inputs */
+input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Estilos gerais */
+.product-img {
+    height: 200px;
+    object-fit: contain;
+    padding: 1rem;
+}
+
+.lead2{ text-decoration: line-through;  color:black;}
+.lead{ font-size:1.4em; font-family: Arial, Helvetica, sans-serif;  color: #fe3469;  line-height: 1.1; }
+
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(0,0,0,0.125);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.navbar {
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.modal-content {
+    background-color: #ffffff;
+    color: #212529;
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+}
+
+/* Estilos do formulário */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-check-input {
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Estilos do carrinho */
+.cart-item-img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    background-color: var(--light-color);
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.quantidade-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quantidade-input {
+    width: 60px;
+    text-align: center;
+    margin: 0 0.5rem;
+    -moz-appearance: textfield;
+}
+
+.quantidade-input::-webkit-inner-spin-button,
+.quantidade-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Animações */
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.alert {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Estilos dos botões */
+.btn {
+    transition: all 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .product-img {
+        height: 150px;
+    }
+
+    .cart-item-img {
+        width: 60px;
+        height: 60px;
+    }
+
+    .quantidade-input {
+        width: 50px;
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 0.5rem;
+    }
+}
+
+/* Melhorias de acessibilidade */
+.btn:focus,
+.form-control:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: var(--dark-color);
+        color: var(--light-color);
+    }
+
+    .card {
+        background-color: #2b3035;
+        border-color: rgba(255,255,255,0.125);
+    }
+
+    .form-control {
+        background-color: #2b3035;
+        border-color: rgba(255,255,255,0.125);
+        color: var(--light-color);
+    }
+
+    .form-control:focus {
+        background-color: #2b3035;
+        color: var(--light-color);
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1a1a1a;
+        color: #f8f9fa;
+    }
+
+    .card {
+        background-color: #2b3035;
+        border-color: rgba(255,255,255,0.1);
+    }
+
+    .table {
+        color: #f8f9fa;
+    }
+
+    .table-light {
+        background-color: #343a40 !important;
+        color: #f8f9fa !important;
+    }
+
+    .text-muted {
+        color: #adb5bd !important;
+    }
+
+    .card-header {
+        background-color: #343a40;
+        border-bottom-color: rgba(255,255,255,0.1);
+    }
+
+    .bg-light {
+        background-color: #343a40 !important;
+        color: #f8f9fa !important;
+    }
+
+    .modal-content {
+        background-color: #2b3035;
+        color: #f8f9fa;
+    }
+
+    .modal-header {
+        border-bottom-color: rgba(255,255,255,0.1);
+    }
+
+    .modal-footer {
+        border-top-color: rgba(255,255,255,0.1);
+    }
+
+    .form-control {
+        background-color: #343a40;
+        border-color: rgba(255,255,255,0.1);
+        color: #f8f9fa;
+    }
+
+    .form-control:focus {
+        background-color: #343a40;
+        color: #f8f9fa;
+        border-color: #0d6efd;
+    }
+
+    .table thead th {
+        border-bottom-color: rgba(255,255,255,0.1);
+    }
+
+    .table td, .table th {
+        border-top-color: rgba(255,255,255,0.1);
+    }
+
+    .alert-info {
+        background-color: #1c4b6e;
+        border-color: #1c4b6e;
+        color: #f8f9fa;
+    }
+
+    /* Ajusta o contraste do resumo do pedido */
+    .card-body h6, 
+    .card-body p,
+    .card-title {
+        color: #f8f9fa;
+    }
+
+    /* Ajusta o contraste dos subtotais e preços */
+    .text-end {
+        color: #f8f9fa !important;
+    }
+
+    /* Ajusta o contraste do breadcrumb */
+    .breadcrumb {
+        background-color: transparent;
+    }
+
+    .breadcrumb-item.active {
+        color: #adb5bd;
+    }
+
+    .breadcrumb-item a {
+        color: #0d6efd;
+    }
+
+    /* Ajusta o contraste dos badges */
+    .badge.bg-secondary {
+        background-color: #6c757d !important;
+        color: #fff !important;
+    }
+
+    /* Ajusta o contraste dos estados dos pedidos */
+    .pedido-status {
+        color: #fff !important;
+    }
+
+    /* Ajusta o contraste dos detalhes do pedido */
+    .table-responsive {
+        background-color: #2b3035;
+    }
+
+    /* Ajusta o contraste dos itens do carrinho */
+    .cart-item-info {
+        color: #f8f9fa;
+    }
+
+    /* Melhora o contraste dos inputs desabilitados */
+    .form-control:disabled {
+        background-color: #1a1a1a;
+        color: #adb5bd;
+    }
+
+    /* Melhora o contraste dos botões outline */
+    .btn-outline-secondary {
+        color: #adb5bd;
+        border-color: #adb5bd;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #adb5bd;
+        color: #1a1a1a;
+    }
+
+    /* Ajusta o contraste dos detalhes de endereço e pagamento */
+    .address-details,
+    .payment-details {
+        background-color: #343a40;
+        border-color: rgba(255,255,255,0.1);
+        color: #f8f9fa;
+    }
+
+    /* Ajusta o contraste do total e subtotal */
+    .price-total,
+    .price-subtotal {
+        color: #f8f9fa !important;
+    }
+
+    /* Ajusta o contraste dos labels dos formulários */
+    .form-label {
+        color: #f8f9fa;
+    }
+
+    
+    .card-text {
+        display: flex;
+        align-items: center;
+        
+    }
+    
+    .rating-stars {
+        display: inline-block;
+        margin-left: 15px;
+        
+    }
+
+    
+}

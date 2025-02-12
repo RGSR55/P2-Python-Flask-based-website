@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Meus Pedidos</h1>
+
+    {% if pedidos %}
+        {% for pedido in pedidos %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <div class="d-flex align-items-center">
+                            <h5 class="mb-0 me-3">Pedido #{{ pedido.id }}</h5>
+                            <span class="badge bg-{{ {
+                                'pendente': 'warning',
+                                'pago': 'info',
+                                'enviado': 'primary',
+                                'entregue': 'success'
+                            }[pedido.status] }}">
+                                {{ {
+                                    'pendente': 'Pendente',
+                                    'pago': 'Pago',
+                                    'enviado': 'Enviado',
+                                    'entregue': 'Entregue'
+                                }[pedido.status] }}
+                            </span>
+                        </div>
+                        <small class="text-muted">
+                            Realizado em {{ pedido.data_pedido.strftime('%d/%m/%Y às %H:%M') }}
+                        </small>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary btn-sm" type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#pedido{{ pedido.id }}">
+                            <i class="fas fa-chevron-down"></i> Detalhes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapse" id="pedido{{ pedido.id }}">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Detalhes dos Produtos -->
+                        <div class="col-md-8">
+                            <h6 class="mb-3">Produtos</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th class="text-center">Quantidade</th>
+                                            <th class="text-end">Preço</th>
+                                            <th class="text-end">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in pedido.items %}
+                                        <tr>
+                                            <td>{{ item.titulo }}</td>
+                                            <td class="text-center">{{ item.quantidade }}</td>
+                                            <td class="text-end">{{ "%.2f"|format(item.preco) }}€</td>
+                                            <td class="text-end">{{ "%.2f"|format(item.subtotal) }}€</td>
+                                        </tr>
+                                        {% endfor %}
+                                        <tr class="table-light">
+                                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                            <td class="text-end"><strong>{{ "%.2f"|format(pedido.total) }}€</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Informações de Entrega e Pagamento -->
+                        <div class="col-md-4">
+                            <div class="mb-4">
+                                <h6 class="mb-3">Endereço de Entrega</h6>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <p class="mb-0">
+                                            {{ pedido.endereco.nome }}<br>
+                                            {{ pedido.endereco.rua }}, {{ pedido.endereco.numero }}<br>
+                                            {{ pedido.endereco.codigo_postal }} {{ pedido.endereco.cidade }}<br>
+                                            {{ pedido.endereco.distrito }}<br>
+                                            Tel: {{ pedido.endereco.telefone }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h6 class="mb-3">Informações de Pagamento</h6>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <p class="mb-2">
+                                            <strong>Método:</strong><br>
+                                            {% if pedido.metodo_pagamento == 'mbway' %}
+                                                <i class="fas fa-mobile-alt"></i> MB WAY
+                                            {% elif pedido.metodo_pagamento == 'multibanco' %}
+                                                <i class="fas fa-university"></i> Multibanco
+                                            {% else %}
+                                                <i class="fas fa-credit-card"></i> Cartão
+                                            {% endif %}
+                                        </p>
+
+                                        {% if pedido.metodo_pagamento == 'multibanco' and pedido.status == 'pendente' %}
+                                        <div class="alert alert-info mb-0">
+                                            <small>
+                                                <strong>Entidade:</strong> 12345<br>
+                                                <strong>Referência:</strong> 123 456 789<br>
+                                                <strong>Valor:</strong> {{ "%.2f"|format(pedido.total) }}€
+                                            </small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if pedido.status == 'enviado' %}
+                    <div class="mt-3">
+                        <div class="alert alert-primary">
+                            <i class="fas fa-truck"></i> 
+                            Pedido em trânsito - Previsão de entrega: 
+                            {{ (pedido.data_pedido + timedelta(days=3)).strftime('%d/%m/%Y') }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-shopping-bag fa-4x text-muted"></i>
+            </div>
+            <h3>Nenhum pedido realizado</h3>
+            <p class="text-muted mb-4">Você ainda não fez nenhum pedido.</p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary">
+                <i class="fas fa-store"></i> Ver Produtos
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Abre automaticamente o primeiro pedido se existir
+    const firstOrder = document.querySelector('.collapse');
+    if (firstOrder) {
+        new bootstrap.Collapse(firstOrder, { show: true });
+    }
+
+    // Alterna o ícone quando o collapse é aberto/fechado
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-chevron-down')) {
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            } else {
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

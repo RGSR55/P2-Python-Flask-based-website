@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="busca" 
+                               placeholder="Procurar produtos..." value="{{ busca }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="categoria">
+                            <option value="">Todas as Categorias</option>
+                            {% for cat in categorias %}
+                            <option value="{{ cat }}" 
+                                    {% if cat == categoria_selecionada %}selected{% endif %}>
+                                {{ cat|title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="ordem">
+                            <option value="">Ordenar por...</option>
+                            <option value="preco_asc" {% if ordem == 'preco_asc' %}selected{% endif %}>
+                                Preço: Menor para Maior
+                            </option>
+                            <option value="preco_desc" {% if ordem == 'preco_desc' %}selected{% endif %}>
+                                Preço: Maior para Menor
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Filtrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h1 class="mb-4">Os Nossos Produtos</h1>
+
+{% if products %}
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <img src="{{ product.image }}" class="card-img-top product-img" alt="{{ product.title }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.title }}</h5>
+                        <p class="card-text">
+                            <span>{{ "%.2f"|format(product.price) }}€ &nbsp;</span>
+                            <span id="rating-stars-{{ product.id }}" class="rating-stars"> </span> 
+                            
+
+                        </p>
+
+                    
+                    
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('produto', id=product.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye"></i> Ver Detalhes
+                        </a>
+                        {% if current_user.is_authenticated %}
+                            <button class="btn btn-outline-danger btn-sm btn-favorito" 
+                                    data-produto-id="{{ product.id }}"
+                                    data-favorito="{{ 'true' if current_user.is_favorito(product.id) else 'false' }}">
+                                <i class="fas fa-heart{{ '' if current_user.is_favorito(product.id) else '-broken' }}"></i>
+                                {{ 'Remover dos Favoritos' if current_user.is_favorito(product.id) else 'Adicionar aos Favoritos' }}
+                            </button>
+                            <button class="btn btn-primary btn-adicionar-carrinho" 
+                                    data-produto-id="{{ product.id }}">
+                                <i class="fas fa-cart-plus"></i> Adicionar ao Carrinho
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-search fa-4x text-muted"></i>
+        </div>
+        <h3>Nenhum produto encontrado</h3>
+        <p class="text-muted mb-4">Tente outros filtros ou limpe a busca.</p>
+        <a href="{{ url_for('home') }}" class="btn btn-primary">
+            <i class="fas fa-sync"></i> Limpar Filtros
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    function mostrarNotificacao(mensagem, tipo = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.container').insertAdjacentElement('afterbegin', alertDiv);
+        setTimeout(() => alertDiv.remove(), 3000);
+    }
+
+    // Adicionar ao carrinho
+    document.querySelectorAll('.btn-adicionar-carrinho').forEach(button => {
+        button.addEventListener('click', async function() {
+            const produtoId = this.dataset.produtoId;
+            try {
+                const response = await fetch('/api/carrinho/adicionar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ produto_id: produtoId })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    mostrarNotificacao('Produto adicionado ao carrinho com sucesso');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    mostrarNotificacao(result.error, 'danger');
+                }
+            } catch (error) {
+                mostrarNotificacao('Erro ao adicionar ao carrinho', 'danger');
+            }
+        });
+    });
+
+    // Favoritos
+    document.querySelectorAll('.btn-favorito').forEach(button => {
+        button.addEventListener('click', async function() {
+            const produtoId = this.dataset.produtoId;
+            const isFavorito = this.dataset.favorito === 'true';
+            const endpoint = isFavorito ? '/api/favoritos/remover' : '/api/favoritos/adicionar';
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ produto_id: produtoId })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    this.dataset.favorito = (!isFavorito).toString();
+                    const icon = this.querySelector('i');
+                    if (isFavorito) {
+                        icon.classList.replace('fa-heart', 'fa-heart-broken');
+                        this.textContent = ' Adicionar aos Favoritos';
+                        mostrarNotificacao('Produto removido dos favoritos');
+                    } else {
+                        icon.classList.replace('fa-heart-broken', 'fa-heart');
+                        this.textContent = ' Remover dos Favoritos';
+                        mostrarNotificacao('Produto adicionado aos favoritos');
+                    }
+                    icon.classList.add('fas');
+                    this.prepend(icon);
+                    setTimeout(() => location.reload(), 1000);
+                }
+            } catch (error) {
+                mostrarNotificacao('Erro ao atualizar favoritos', 'danger');
+            }
+        });
+    });
+});
+
+function renderStars(rating, elementId) {
+    const starContainer = document.getElementById(elementId);
+    if (!starContainer) return; 
+
+    starContainer.innerHTML = ""; 
+
+    const fullStars = Math.floor(rating); 
+    const halfStar = rating % 1 >= 0.3 && rating % 1 <= 0.7; 
+    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0); 
+
+    for (let i = 0; i < fullStars; i++) {
+        starContainer.innerHTML += '<i class="fas fa-star text-warning"></i>';
+    }
+    if (halfStar) {
+        starContainer.innerHTML += '<i class="fas fa-star-half-alt text-warning"></i>';
+    }
+    for (let i = 0; i < emptyStars; i++) {
+        starContainer.innerHTML += '<i class="far fa-star text-warning"></i>';
+    }
+}
+
+// Loop para processar todos os produtos e renderizar as estrelas
+{% for product in products %}
+    const ratingValue{{ product.id }} = parseFloat("{{ product.rating }}"); 
+    if (!isNaN(ratingValue{{ product.id }})) {
+        renderStars(ratingValue{{ product.id }}, "rating-stars-{{ product.id }}");
+    }
+{% endfor %}
+
+
+</script>
+{% endblock %}

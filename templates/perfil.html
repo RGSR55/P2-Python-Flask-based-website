@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Meu Perfil</h1>
+
+    <div class="row">
+        <!-- Coluna da Esquerda - Dados Pessoais -->
+        <div class="col-md-8">
+            <!-- Dados Pessoais -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Dados Pessoais</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="update_profile">
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome Completo</label>
+                            <input type="text" class="form-control" id="nome" name="nome" 
+                                   value="{{ current_user.nome }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nome de Utilizador</label>
+                            <input type="text" class="form-control" id="username" 
+                                   value="{{ current_user.username }}" disabled>
+                            <small class="text-muted">O nome de utilizador não pode ser alterado</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ current_user.email }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Alterações
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alterar Senha -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Alterar Palavra-passe</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="change_password">
+                        <div class="mb-3">
+                            <label for="senha_atual" class="form-label">Palavra-passe Atual</label>
+                            <input type="password" class="form-control" id="senha_atual" 
+                                   name="senha_atual" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nova_senha" class="form-label">Nova Palavra-passe</label>
+                            <input type="password" class="form-control" id="nova_senha" 
+                                   name="nova_senha" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmar_senha" class="form-label">Confirmar Nova Palavra-passe</label>
+                            <input type="password" class="form-control" id="confirmar_senha" 
+                                   name="confirmar_senha" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-key"></i> Alterar Palavra-passe
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna da Direita - Endereços e Pedidos -->
+        <div class="col-md-4">
+            <!-- Endereços -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Endereços</h5>
+                    {% if current_user.enderecos|length < 3 %}
+                        <a href="{{ url_for('novo_endereco') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> Novo Endereço
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body">
+                    {% if current_user.enderecos %}
+                        {% for endereco in current_user.enderecos %}
+                        <div class="mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ endereco.nome }}</strong>
+                                {% if endereco.padrao %}
+                                    <span class="badge bg-primary">Padrão</span>
+                                {% endif %}
+                            </div>
+                            <p class="mb-1">
+                                {{ endereco.rua }}, {{ endereco.numero }}<br>
+                                {{ endereco.codigo_postal }} {{ endereco.cidade }}<br>
+                                {{ endereco.distrito }}
+                            </p>
+                            <small class="text-muted">Tel: {{ endereco.telefone }}</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted mb-0">Nenhum endereço registado</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Últimos Pedidos -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Últimos Pedidos</h5>
+                    <a href="{{ url_for('pedidos') }}" class="btn btn-sm btn-link">Ver Todos</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if ultimos_pedidos %}
+                    <div class="list-group list-group-flush">
+                        {% for pedido in ultimos_pedidos %}
+                        <a href="{{ url_for('pedidos') }}#pedido{{ pedido.id }}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Pedido #{{ pedido.id }}</strong><br>
+                                    <small class="text-muted">
+                                        {{ pedido.data_pedido.strftime('%d/%m/%Y') }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-{{ {
+                                        'pendente': 'warning',
+                                        'pago': 'info',
+                                        'enviado': 'primary',
+                                        'entregue': 'success'
+                                    }[pedido.status] }}">
+                                        {{ pedido.status|title }}
+                                    </span><br>
+                                    <small class="text-muted">
+                                        {{ "%.2f"|format(pedido.total) }}€
+                                    </small>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                        <div class="p-3">
+                            <p class="text-muted mb-0">Nenhum pedido realizado</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

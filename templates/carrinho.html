@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="py-3">
+        <h1 class="mb-4">Carrinho de Compras</h1>
+        
+        {% if not current_user.is_authenticated %}
+            <div class="alert alert-warning">
+                Por favor, <a href="{{ url_for('login') }}">inicie sessão</a> para aceder ao seu carrinho.
+            </div>
+        {% else %}
+            <div id="carrinho-container">
+                {% if current_user.carrinho and current_user.carrinho.get('items') and current_user.carrinho['items']|length > 0 %}
+                    <div class="table-responsive mb-4">
+                        <table class="table align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" style="width: 40%">Produto</th>
+                                    <th scope="col" class="text-center">Preço</th>
+                                    <th scope="col" class="text-center">Quantidade</th>
+                                    <th scope="col" class="text-center">Subtotal</th>
+                                    <th scope="col" class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in current_user.carrinho['items'] %}
+                                <tr data-produto-id="{{ item.id }}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ item.imagem }}" alt="{{ item.titulo }}" 
+                                                 class="cart-item-img me-3">
+                                            <div>
+                                                <h6 class="mb-0">{{ item.titulo }}</h6>
+                                                <small class="text-muted">ID: {{ item.id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ "%.2f"|format(item.preco) }}€</td>
+                                    <td class="text-center">
+                                        <div class="quantidade-controls d-flex justify-content-center align-items-center">
+                                            <button class="btn btn-sm btn-outline-secondary diminuir-quantidade"
+                                                    {% if item.quantidade <= 1 %}disabled{% endif %}>
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <input type="number" class="form-control quantidade-input mx-2" 
+                                                   value="{{ item.quantidade }}" min="1" max="99"
+                                                   style="width: 60px; text-align: center;">
+                                            <button class="btn btn-sm btn-outline-secondary aumentar-quantidade"
+                                                    {% if item.quantidade >= 99 %}disabled{% endif %}>
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ "%.2f"|format(item.subtotal) }}€</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-danger btn-sm remover-item" 
+                                        onclick="confirmarRemocao('{{ item.id }}', `{{ item.titulo }}`)">
+                                            <i class="fas fa-trash"></i> Remover
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                    <td class="text-center">
+                                        <strong>{{ "%.2f"|format(current_user.carrinho.get('total', 0)) }}€</strong>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title">Resumo do Carrinho</h5>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal</span>
+                                        <span>{{ "%.2f"|format(current_user.carrinho.get('total', 0)) }}€</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Portes de Envio</span>
+                                        <span>Grátis</span>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total</strong>
+                                        <strong>{{ "%.2f"|format(current_user.carrinho.get('total', 0)) }}€</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('home') }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-arrow-left"></i> Continuar a Comprar
+                                </a>
+                                <button class="btn btn-success" id="btn-finalizar">
+                                    <i class="fas fa-shopping-cart"></i> Finalizar Compra
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-shopping-cart fa-4x text-muted"></i>
+                        </div>
+                        <h3>O seu carrinho está vazio</h3>
+                        <p class="text-muted mb-4">Adicione produtos ao seu carrinho para começar a comprar.</p>
+                        <a href="{{ url_for('home') }}" class="btn btn-primary">
+                            <i class="fas fa-store"></i> Ver Produtos
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal fade" id="modalConfirmacao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Remoção</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja remover "<span id="nomeProduto"></span>" do carrinho?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="confirmarRemover">Remover</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let produtoIdParaRemover = null;
+    const modalConfirmacao = new bootstrap.Modal(document.getElementById('modalConfirmacao'));
+
+    // Função para mostrar notificações
+    function mostrarNotificacao(mensagem, tipo = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${mensagem}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('#carrinho-container').insertAdjacentElement('beforebegin', alertDiv);
+        setTimeout(() => alertDiv.remove(), 3000);
+    }
+
+    // Função para remover do carrinho
+    async function removerDoCarrinho(produtoId) {
+    try {
+        console.log('Removendo produto:', produtoId); // Debug
+
+        const response = await fetch('/api/carrinho/remover', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                produto_id: parseInt(produtoId) // Garantir que é número
+            })
+        });
+        
+        console.log('Resposta:', response.status); // Debug
+        
+        if (!response.ok) throw new Error('Erro ao remover produto');
+        
+        const result = await response.json();
+        console.log('Resultado:', result); // Debug
+        
+        if (result.success) {
+            mostrarNotificacao('Produto removido do carrinho com sucesso');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            mostrarNotificacao(result.error || 'Erro ao remover produto', 'danger');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarNotificacao('Erro ao remover produto do carrinho', 'danger');
+    }
+}
+
+    // Função para atualizar quantidade
+    async function atualizarQuantidade(produtoId, quantidade) {
+        try {
+            console.log('Atualizando quantidade:', { produtoId, quantidade }); // Debug
+
+            const response = await fetch('/api/carrinho/atualizar', {
+                method: 'POST',
+                headers: {
+                 'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    produto_id: parseInt(produtoId),  // Garantir que é número
+                    quantidade: parseInt(quantidade)   // Garantir que é número
+                })
+            });
+        
+            console.log('Resposta:', response.status); // Debug
+        
+            if (!response.ok) throw new Error('Erro ao atualizar quantidade');
+        
+            const result = await response.json();
+            console.log('Resultado:', result); // Debug
+        
+            if (result.success) {
+                mostrarNotificacao('Quantidade atualizada com sucesso');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                mostrarNotificacao(result.error || 'Erro ao atualizar quantidade', 'danger');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            mostrarNotificacao('Erro ao atualizar quantidade', 'danger');
+        }
+    }
+
+    // Função para confirmar remoção - exposta globalmente
+    window.confirmarRemocao = function(produtoId, nomeProduto) {
+        produtoIdParaRemover = produtoId;
+        document.getElementById('nomeProduto').textContent = nomeProduto;
+        modalConfirmacao.show();
+    };
+
+    // Event listener para o botão de confirmar remoção
+    document.getElementById('confirmarRemover').addEventListener('click', function() {
+        if (produtoIdParaRemover) {
+            removerDoCarrinho(produtoIdParaRemover);
+            modalConfirmacao.hide();
+        }
+    });
+
+    // Event listeners para controles de quantidade
+    document.querySelectorAll('.aumentar-quantidade').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const input = row.querySelector('.quantidade-input');
+            const produtoId = row.dataset.produtoId; // Pegar o ID do dataset
+            const novaQuantidade = parseInt(input.value) + 1;
+        
+            console.log('Aumentar:', { produtoId, novaQuantidade }); // Debug
+        
+            if (novaQuantidade <= 99) {
+                atualizarQuantidade(produtoId, novaQuantidade);
+            }
+        });
+    });
+
+    document.querySelectorAll('.diminuir-quantidade').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const row = this.closest('tr');
+        const input = row.querySelector('.quantidade-input');
+        const produtoId = row.dataset.produtoId; // Pegar o ID do dataset
+        const novaQuantidade = parseInt(input.value) - 1;
+        
+        console.log('Diminuir:', { produtoId, novaQuantidade }); // Debug
+        
+        if (novaQuantidade >= 1) {
+            atualizarQuantidade(produtoId, novaQuantidade);
+        }
+    });
+});
+
+document.querySelectorAll('.quantidade-input').forEach(input => {
+    input.addEventListener('change', function() {
+        const row = this.closest('tr');
+        const produtoId = row.dataset.produtoId; // Pegar o ID do dataset
+        let novaQuantidade = parseInt(this.value);
+        
+        console.log('Input direto:', { produtoId, novaQuantidade }); // Debug
+        
+        if (isNaN(novaQuantidade) || novaQuantidade < 1) novaQuantidade = 1;
+        if (novaQuantidade > 99) novaQuantidade = 99;
+        
+        this.value = novaQuantidade;
+        atualizarQuantidade(produtoId, novaQuantidade);
+    });
+});
+
+    // Event listener para o botão de finalizar compra
+    document.querySelector('#btn-finalizar')?.addEventListener('click', function() {
+        window.location.href = '/checkout';
+    });
+});
+</script>
+{% endblock %}
